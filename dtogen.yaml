@@ -1,0 +1,23 @@
+# Global settings applied to all DTOs unless overridden
+global:
+  output_dir: "./output"
+
+dtos:
+  - type: User
+    source: "./testdata"
+    #    name: NewCustomName
+    #    output: employer_custom_dto.go
+    excludes:
+      - Email
+    # includes: [ID, Username]
+    # renames:
+    #   Username: Login
+    filters:
+      - when: IsActive
+        do: |
+          out.Username = "Active"
+          out.ID = 0
+      - when: IsActive
+        do: |
+          out.Username = "Rdo Active"
+          out.ID = 1000
