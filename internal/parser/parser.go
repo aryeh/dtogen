@@ -10,6 +10,10 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+// pkgCache caches loaded packages by pattern to avoid redundant loads
+// when multiple DTOs come from the same source package.
+var pkgCache = make(map[string][]*packages.Package)
+
 // StructInfo holds information about the parsed struct
 type StructInfo struct {
 	PackageName string
@@ -28,17 +32,23 @@ type FieldInfo struct {
 
 // Parse loads the package and finds the specified struct
 func Parse(pattern string, structName string) (*StructInfo, error) {
-	cfg := &packages.Config{
-		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
-	}
+	pkgs, ok := pkgCache[pattern]
+	if !ok {
+		cfg := &packages.Config{
+			Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
+		}
 
-	pkgs, err := packages.Load(cfg, pattern)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load packages: %w", err)
-	}
+		var err error
+		pkgs, err = packages.Load(cfg, pattern)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load packages: %w", err)
+		}
 
-	if packages.PrintErrors(pkgs) > 0 {
-		return nil, fmt.Errorf("packages contained errors")
+		if packages.PrintErrors(pkgs) > 0 {
+			return nil, fmt.Errorf("packages contained errors")
+		}
+
+		pkgCache[pattern] = pkgs
 	}
 
 	for _, pkg := range pkgs {
