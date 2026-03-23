@@ -1,14 +1,17 @@
 package main
 
 import (
-	"dtogen/internal/config"
-	"dtogen/internal/generator"
-	"dtogen/internal/parser"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
+
+	"dtogen/internal/config"
+	"dtogen/internal/generator"
+	"dtogen/internal/parser"
 
 	"github.com/spf13/pflag"
 )
@@ -160,7 +163,7 @@ func runConfig(path string) {
 			AddFields:      dto.AddFields,
 			TemplatePath:   dto.Template,
 			Imports:        cfg.Global.Imports,
-			ExcludeImports: cfg.Global.ExcludeImports,
+			ExcludeImports: append(cfg.Global.ExcludeImports, dto.ExcludeImports...),
 		}
 
 		if err := runGenerator(source, outDir, out, genCfg); err != nil {
@@ -191,14 +194,17 @@ func pascalCaseToSnakeCase(s string) string {
 func runGenerator(src, outDir, out string, cfg generator.Config) error {
 	// Construct full output path
 	if outDir != "" {
-		if err := os.MkdirAll(outDir, 0755); err != nil {
+		if err := os.MkdirAll(outDir, 0o755); err != nil {
 			return fmt.Errorf("creating output directory: %w", err)
 		}
 		out = filepath.Join(outDir, out)
 
 		// remove the dest file.
 		if err := os.Remove(out); err != nil {
-			fmt.Printf("Failed removing file before starting [%s]: %v\n", out, err)
+			if !errors.Is(err, fs.ErrNotExist) {
+				fmt.Printf("Failed removing file before starting [%s]: %v\n", out, err)
+				// Continue with the rest of your logic
+			}
 		}
 
 	}
@@ -223,7 +229,7 @@ func runGenerator(src, outDir, out string, cfg generator.Config) error {
 	}
 
 	// Write to file
-	if err := os.WriteFile(out, code, 0644); err != nil {
+	if err := os.WriteFile(out, code, 0o644); err != nil {
 		return fmt.Errorf("writing file: %w", err)
 	}
 

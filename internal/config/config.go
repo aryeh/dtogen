@@ -1,9 +1,10 @@
 package config
 
 import (
-	"dtogen/internal/types"
 	"fmt"
 	"os"
+
+	"dtogen/internal/types"
 
 	"gopkg.in/yaml.v3"
 )
@@ -21,16 +22,17 @@ type GlobalConfig struct {
 }
 
 type DTOConfig struct {
-	Type      string            `yaml:"type"`
-	Source    string            `yaml:"source"`
-	Name      string            `yaml:"name"`
-	Output    string            `yaml:"output"`
-	Excludes  []string          `yaml:"excludes"`
-	Includes  []string          `yaml:"includes"`
-	AddFields []string          `yaml:"add_fields"`
-	Renames   map[string]string `yaml:"renames"`
-	Filters   []types.Filter    `yaml:"filters"`
-	Template  string            `yaml:"template"`
+	Type           string            `yaml:"type"`
+	Source         string            `yaml:"source"`
+	Name           string            `yaml:"name"`
+	Output         string            `yaml:"output"`
+	Excludes       []string          `yaml:"excludes"`
+	Includes       []string          `yaml:"includes"`
+	AddFields      []string          `yaml:"add_fields"`
+	Renames        map[string]string `yaml:"renames"`
+	Filters        []types.Filter    `yaml:"filters"`
+	ExcludeImports []string          `yaml:"exclude_imports"`
+	Template       string            `yaml:"template"`
 }
 
 func Load(path string) (*Config, error) {
@@ -72,5 +74,5 @@ dtos:
     #       Cmd 2
 
 `
-	return os.WriteFile(path, []byte(sample), 0644)
+	return os.WriteFile(path, []byte(sample), 0o644)
 }
